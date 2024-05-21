@@ -24,6 +24,6 @@ This is a new generation server panel developed based on Rust.It is capable of m
 |File Management|`You can edit code online and visualize file management.This is a prominent security issue, so we will encrypt the files during transmission and saveing`
 |Firewall|`Port allow and deny, SSH management`
 |Asset Management|`Manage multiple panels with one panel, simply add the main server connection address and API key to the configuration file to manage multiple panels`
-|OpenApi|`You can manage it yourself using APIs`
+|OpenApi|`You can manage it yourself by using APIs`
 |Plugins|`Plugins that support Rust, Go, C, and C++development will be implemented`
 |Multilingual|`English、Chinese`
