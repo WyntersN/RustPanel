@@ -1,0 +1,16 @@
+app:
+  host: 0.0.0.0
+  port: 8080
+  security_dir: dfhg156d1
+  #session_ttl hours
+  session_ttl: 24
+  secret_key: 27257ae8c2ef465bbf13
+  #workers 0:auto
+  workers: 0
+  #language zh-CN,en-US
+  locale: zh-CN
+  #file open edit max size MB
+  max_file_size: 5
+database:
+  path: ./data.db3
+  max_pool: 10
