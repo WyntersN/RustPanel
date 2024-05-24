@@ -1,0 +1,22 @@
+_version: 2
+file:
+   content:
+      info_error:
+        zh-CN: 获取文件信息出错
+        en-US: Error getting file metadata
+      file_type_error:
+        zh-CN: 暂不支持该文件类型
+        en-US: Unsupported file type
+      file_max_size_error:
+        zh-CN: 文件大小超过限制 %{size} MB
+        en-US: File size exceeds limit %{size} MB
+      open_error:
+        zh-CN: 打开文件出错
+        en-US: Error opening file
+      read_error:
+        zh-CN: 读取文件出错
+        en-US: Error reading file
+   save:
+      write_error:
+        zh-CN: 创建文件出错：%{error}
+        en-US: Error creating file:%{error}

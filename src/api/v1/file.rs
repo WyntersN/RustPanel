@@ -4,6 +4,7 @@ use crate::common::fun::{sm4_decrypt_file, sm4_encrypt_file};
 use crate::server::global::CONF;
 use actix_web::{web, Error, HttpResponse};
 use encoding_rs::{GBK, UTF_8};
+use rust_i18n::t;
 use serde::{Deserialize, Serialize};
 use std::ffi::OsStr;
 use std::fs::{self, File};
@@ -33,17 +34,18 @@ pub async fn list(_: AuthUser, data: web::Query<ListData>) -> Result<HttpRespons
 }
 
 pub async fn save(_: AuthUser, data: web::Json<SaveData>) -> Result<HttpResponse, Error> {
-
     println!("{}", data.path);
 
     //保存文件
     let content = sm4_decrypt_file(data.content.to_string());
-    if !Path::new(&data.path).exists() {
-        // 如果文件不存在，则创建它
-        fs::write(&data.path, content).expect("无法创建文件");
-    } else {
-        // 如果文件存在，则覆盖它
-        fs::write(&data.path, content).expect("无法覆盖文件");
+    if let Err(e) = fs::write(&data.path, content) {
+        return Ok(
+            HttpResponse::InternalServerError().json(ResponseStructureError {
+                success: false,
+                code: 500,
+                message: String::from(t!("file.save.write_error",error=>e.to_string())),
+            }),
+        );
     }
 
     Ok(HttpResponse::Ok().json(ResponseStructure {
@@ -64,8 +66,7 @@ pub async fn content(_: AuthUser, data: web::Query<ContentData>) -> HttpResponse
         return HttpResponse::InternalServerError().json(ResponseStructureError {
             success: false,
             code: 500,
-            message: String::from("Error getting file metadata"),
-         
+            message: String::from(t!("file.content.info_error")),
         });
     });
     // 先定义一个外部变量，用于存储文件的扩展名
@@ -77,7 +78,7 @@ pub async fn content(_: AuthUser, data: web::Query<ContentData>) -> HttpResponse
             return HttpResponse::InternalServerError().json(ResponseStructureError {
                 success: false,
                 code: 500,
-                message: String::from("Error getting file metadata"),
+                message: String::from(t!("file.content.file_type_error")),
             });
         }
     }
@@ -88,7 +89,9 @@ pub async fn content(_: AuthUser, data: web::Query<ContentData>) -> HttpResponse
         return HttpResponse::InternalServerError().json(ResponseStructureError {
             success: false,
             code: 500,
-            message: format!("File size exceeds {} MB", CONF.app.max_file_size) ,
+            message: String::from(
+                t!("file.content.file_max_size_error",size=>CONF.app.max_file_size),
+            ),
         });
     }
 
@@ -99,7 +102,7 @@ pub async fn content(_: AuthUser, data: web::Query<ContentData>) -> HttpResponse
             return HttpResponse::InternalServerError().json(ResponseStructureError {
                 success: false,
                 code: 500,
-                message: String::from("Error opening file"),
+                message: String::from(t!("file.content.open_error")),
             });
         }
     };
@@ -113,7 +116,7 @@ pub async fn content(_: AuthUser, data: web::Query<ContentData>) -> HttpResponse
                 return HttpResponse::InternalServerError().json(ResponseStructureError {
                     success: false,
                     code: 500,
-                    message: String::from("Error reading file"),
+                    message: String::from(t!("file.content.read_error")),
                 });
             }
             convert_gbk_to_utf8(content_vec)
@@ -124,7 +127,9 @@ pub async fn content(_: AuthUser, data: web::Query<ContentData>) -> HttpResponse
         success: true,
         code: 200,
         message: String::from("Success"),
-        data: Some(serde_json::json!({"content":sm4_encrypt_file(content.as_str()),"ext":extension})),
+        data: Some(
+            serde_json::json!({"content":sm4_encrypt_file(content.as_str()),"ext":extension}),
+        ),
     })
 }
 

@@ -4,7 +4,7 @@
  # @version: 
  # @Author: Wynters
  # @Date: 2024-05-05 23:03:31
- # @LastEditTime: 2024-05-18 20:19:55
+ # @LastEditTime: 2024-05-24 13:03:11
  # @FilePath: \RustPanel\build.sh
  #
  #
@@ -19,9 +19,9 @@ case "$OS" in
         #LINK="x86_64-unknown-linux-gnu"
         LINK="x86_64-unknown-linux-musl"
         VERSION=$(grep 'version =' ./Cargo.toml | grep -o '[0-9]*\.[0-9]*\.[0-9]*')
-                
+        TARGET_DIR="./target/$LINK/release/RustPanel"
 
-        rm -rf "./target/$LINK/release/RustPanel"
+        rm -rf "$TARGET_DIR"
         rm -rf "./target/$LINK/release/panel"
         rm -rf "./target/$LINK/release/rp"
 
@@ -29,70 +29,83 @@ case "$OS" in
         if [ $? -ne 0 ]; then
             echo ">>> Error: Cargo build failed from Linux"
         else
-            #mv "./target/$LINK/release/RustPanel" "./target/$LINK/release/panel"
+            #mv "$TARGET_DIR" "./target/$LINK/release/panel"
             echo "Cargo build successful from $LINK"
 
-            mkdir -p "./target/$LINK/release/RustPanel"
-            mkdir -p "./target/$LINK/release/RustPanel/bin"
-            mkdir -p "./target/$LINK/release/RustPanel/runtime"
-            cp -r "./addons" "./target/$LINK/release/RustPanel" > NUL
-            cp -r "./config" "./target/$LINK/release/RustPanel" > NUL
-            cp -r "./public" "./target/$LINK/release/RustPanel" > NUL
-            cp -r "./locales" "./target/$LINK/release/RustPanel" > NUL
+            mkdir -p "$TARGET_DIR"
+            mkdir -p "$TARGET_DIR/bin"
+            mkdir -p "$TARGET_DIR/runtime"
 
-            cp "./target/$LINK/release/rp" "./target/$LINK/release/RustPanel/bin/rp"
-            cp "./target/$LINK/release/panel" "./target/$LINK/release/RustPanel/panel"
+            dirs="addons config public locales install"
+            for dir in $dirs; do
+                cp -r "./$dir" "$TARGET_DIR" > /dev/null
+                if [ $? -ne 0 ]; then
+                     echo "error: copy $dir to $TARGET_DIR fial"
+                    exit 1
+                fi
+            done
 
-            ./build/upx -9 -qvf "./target/$LINK/release/RustPanel/panel" "./target/$LINK/release/RustPanel/bin/rp"
+
+            cp "./target/$LINK/release/rp"     "$TARGET_DIR/bin/rp"
+            cp "./target/$LINK/release/panel"  "$TARGET_DIR/panel"
+
+            ./build/upx -9 -qvf "$TARGET_DIR/panel" "$TARGET_DIR/bin/rp"
              
 
-            echo $(grep 'version =' ./Cargo.toml | grep -o '[0-9]*\.[0-9]*\.[0-9]*' | tail -n1) > "./target/$LINK/release/RustPanel/VERSION"
+            echo $(grep 'version =' ./Cargo.toml | grep -o '[0-9]*\.[0-9]*\.[0-9]*' | tail -n1) > "$TARGET_DIR/VERSION"
 
             rm -rf "./target/RustPanel_$VERSION-$LINK.tar.gz" 
             tar -czvf "./target/RustPanel_$VERSION-$LINK.tar.gz" -C "./target/$LINK/release" RustPanel > NUL
 
-            echo ">>> :) build successful, directory in: ./target/$LINK/release/RustPanel"
+            echo ">>> :) build successful, directory in: $TARGET_DIR"
         fi
     ;;
     Win*)
             
         LINK="x86_64-pc-windows-msvc"
         VERSION=$(grep 'version =' ./Cargo.toml | grep -o '[0-9]*\.[0-9]*\.[0-9]*')
+        TARGET_DIR="./target/$LINK/release/RustPanel"
 
         rm -rf "./target/$LINK/release/*.*"
-        rm -rf "./target/$LINK/release/RustPanel"
+        rm -rf "$TARGET_DIR"
 
         cargo build --target "$LINK" --release
         if [ $? -ne 0 ]; then
             echo ">>> Error: Cargo build failed from Windows"
         else
-            #mv "./target/$LINK/release/RustPanel.exe" "./target/$LINK/release/panel.exe"
+            #mv "$TARGET_DIR.exe" "./target/$LINK/release/panel.exe"
             echo "Cargo build successful from $LINK"
 
-            mkdir -p "./target/$LINK/release/RustPanel"
-            mkdir -p "./target/$LINK/release/RustPanel/bin"
-            mkdir -p "./target/$LINK/release/RustPanel/runtime"
-            cp -r "./addons" "./target/$LINK/release/RustPanel" > NUL
-            cp -r "./config" "./target/$LINK/release/RustPanel" > NUL
-            cp -r "./public" "./target/$LINK/release/RustPanel" > NUL
-            cp -r "./locales" "./target/$LINK/release/RustPanel" > NUL
+            mkdir -p "$TARGET_DIR"
+            mkdir -p "$TARGET_DIR/bin"
+            mkdir -p "$TARGET_DIR/runtime"
 
-            cp "./target/$LINK/release/rp.exe" "./target/$LINK/release/RustPanel/bin/rp.exe"
-            cp "./target/$LINK/release/panel.exe" "./target/$LINK/release/RustPanel/panel.exe"
-            echo $(grep 'version =' ./Cargo.toml | grep -o '[0-9]*\.[0-9]*\.[0-9]*' | tail -n1) > "./target/$LINK/release/RustPanel/VERSION"
+            dirs="addons config public locales install"
+            for dir in $dirs; do
+                cp -r "./$dir" "$TARGET_DIR" > /dev/null
+                if [ $? -ne 0 ]; then
+                    echo "error: copy $dir to $TARGET_DIR fial"
+                    exit 1
+                fi
+            done
+
+            cp "./target/$LINK/release/rp.exe"     "$TARGET_DIR/bin/rp.exe"
+            cp "./target/$LINK/release/panel.exe"  "$TARGET_DIR/panel.exe"
+            echo $(grep 'version =' ./Cargo.toml | grep -o '[0-9]*\.[0-9]*\.[0-9]*' | tail -n1) > "$TARGET_DIR/VERSION"
 
             rm -rf "./target/RustPanel_$VERSION-$LINK.tar.gz" 
             tar -czvf "./target/RustPanel_$VERSION-$LINK.tar.gz" -C "./target/$LINK/release" RustPanel > NUL
 
             
-            echo ">>> :) build successful, directory in: ./target/$LINK/release/RustPanel"
+            echo ">>> :) build successful, directory in: $TARGET_DIR"
         fi
 
     ;;
     *)
         VERSION=$(grep 'version =' ./Cargo.toml | grep -o '[0-9]*\.[0-9]*\.[0-9]*')
-
-        rm -rf "./target/release/RustPanel"
+        TARGET_DIR="./target/release/RustPanel"
+        
+        rm -rf "$TARGET_DIR"
         rm -rf "./target/$LINK/release/panel"
         rm -rf "./target/$LINK/release/rp"
 
@@ -100,28 +113,33 @@ case "$OS" in
         if [ $? -ne 0 ]; then
             echo ">>> Error: Cargo build failed from $OS"
         else
-            #mv "./target/release/RustPanel" "./target/release/panel"
+            #mv "$TARGET_DIR" "./target/release/panel"
             echo "Cargo build successful from $LINK"
 
-            mkdir -p "./target/release/RustPanel"
-            mkdir -p "./target/release/RustPanel/bin"
-            mkdir -p "./target/release/RustPanel/runtime"
-            cp -r "./addons" "./target/release/RustPanel" > NUL
-            cp -r "./config" "./target/release/RustPanel" > NUL
-            cp -r "./public" "./target/release/RustPanel" > NUL
-            cp -r "./locales" "./target/release/RustPanel" > NUL
+            mkdir -p "$TARGET_DIR"
+            mkdir -p "$TARGET_DIR/bin"
+            mkdir -p "$TARGET_DIR/runtime"
 
-            cp "./target/release/rp" "./target/release/RustPanel/bin/rp"
-            cp "./target/release/panel" "./target/release/RustPanel/panel"
+            dirs="addons config public locales install"
+            for dir in $dirs; do
+                cp -r "./$dir" "$TARGET_DIR" > /dev/null
+                if [ $? -ne 0 ]; then
+                     echo "error: copy $dir to $TARGET_DIR fial"
+                    exit 1
+                fi
+            done
 
-             ./build/upx -9 -qvf "./target/release/RustPanel/panel" "./target/release/RustPanel/bin/rp"
+            cp "./target/release/rp"     "$TARGET_DIR/bin/rp"
+            cp "./target/release/panel"  "$TARGET_DIR/panel"
 
-            echo $(grep 'version =' ./Cargo.toml | grep -o '[0-9]*\.[0-9]*\.[0-9]*' | tail -n1) > "./target/release/RustPanel/VERSION"
+             ./build/upx -9 -qvf "$TARGET_DIR/panel" "$TARGET_DIR/bin/rp"
+
+            echo $(grep 'version =' ./Cargo.toml | grep -o '[0-9]*\.[0-9]*\.[0-9]*' | tail -n1) > "$TARGET_DIR/VERSION"
 
             rm -rf "./target/RustPanel_$VERSION-$LINK.tar.gz" 
             tar -czvf "./target/RustPanel_$VERSION-$LINK.tar.gz" -C "./target/release" RustPanel > NUL
             
-            echo ">>> :) build successful, directory in: ./target/release/RustPanel"
+            echo ">>> :) build successful, directory in: $TARGET_DIR"
         fi
     ;;
 esac
