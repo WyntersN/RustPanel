@@ -11,7 +11,7 @@
 _language: English, [中文](README.cn-zh.md)
 
 ## 🤔 What is this?
-![image](https://github.com/WyntersN/RustPanel/assets/27792650/a7e0cadb-2c44-44c5-9384-63f815edbee8)
+![image](https://github.com/WyntersN/RustPanel/assets/27792650/08d1eae1-8161-4e13-a89c-b98bc147fd13)
 
 This is a new generation server panel developed based on Rust.It is capable of monitoring server CPU, memory, traffic inflow and outflow, as well as managing databases, websites, dockers, support third-party plugin development and other operations
 
