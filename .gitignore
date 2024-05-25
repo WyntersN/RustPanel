@@ -1,6 +1,8 @@
 /target
-/build/*
 /runtime/*
 /config/*.yaml
 *.lock
 *.db*
+/wwwroot/*
+/server/*
+*.pid

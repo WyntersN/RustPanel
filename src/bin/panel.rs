@@ -3,7 +3,7 @@
  * @version:
  * @Author: Wynters
  * @Date: 2024-05-07 15:35:18
- * @LastEditTime: 2024-05-13 23:07:38
+ * @LastEditTime: 2024-05-25 15:59:42
  * @FilePath: \RustPanel\src\bin\panel.rs
  */
 use actix_files as fs;
@@ -16,7 +16,8 @@ use rust_panel::{
         global::{CONF, SESSION_KEY},
     }, test
 };
-use std::collections::HashMap;
+use std::{collections::HashMap, fs::File, process};
+use std::io::Write;
 
 #[get("/hello/{name}")]
 async fn greet(
@@ -170,6 +171,25 @@ async fn main() -> std::io::Result<()> {
 fn init() {
     log4rs::init_file("./config/log4rs.yaml", Default::default()).expect("init Error...log4rs init failed!");
     rust_i18n::set_locale("zh-CN");
+
+
+
+    let pid = process::id();
+
+    // 创建或打开 .pid 文件
+    let mut file = match File::create("panel.pid") {
+        Ok(file) => file,
+        Err(err) => {
+            eprintln!("Error creating file: {}", err);
+            return;
+        }
+    };
+
+     // 将 PID 写入 .pid 文件
+     match write!(file, "{}", pid) {
+        Ok(_) => println!("PID {} written to example.pid", pid),
+        Err(err) => eprintln!("Error writing to file: {}", err),
+    }
     // let mut aaa = false;
 
     // DB.with( |db| {

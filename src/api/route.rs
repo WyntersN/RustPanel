@@ -3,7 +3,7 @@
  * @version: 
  * @Author: Wynters
  * @Date: 2024-05-09 19:10:36
- * @LastEditTime: 2024-05-20 17:41:04
+ * @LastEditTime: 2024-05-25 16:13:34
  * @FilePath: \RustPanel\src\api\route.rs
  */
 use actix_web::web;
@@ -44,5 +44,6 @@ pub fn v1() -> actix_web::Scope {
                     .route(web::get().to(v1::os::os_info))
             )
             .service(v1::ping)
+            .service(v1::pid_runing)
 )
 }

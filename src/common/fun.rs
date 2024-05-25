@@ -1,8 +1,17 @@
+/*
+ * @Descripttion: 
+ * @version: 
+ * @Author: Wynters
+ * @Date: 2024-05-08 21:09:05
+ * @LastEditTime: 2024-05-25 16:21:13
+ * @FilePath: \RustPanel\src\common\fun.rs
+ */
 use crypto::md5::Md5;
 use crypto::digest::Digest;
 use crypto::sha1::Sha1;
 use gmsm::sm4::{sm4_cbc_decrypt_hex,  sm4_cbc_encrypt_hex};
 use rand::Rng;
+use sysinfo::{Pid, System};
 
 pub fn sha1_salt(text: String,salt: String) -> String {
     let mut hasher = Sha1::new();
@@ -48,4 +57,26 @@ pub fn sm4_encrypt_file(plain:&str)-> String{
     let secret_key = binding.as_str();
 
     sm4_cbc_encrypt_hex(plain, secret_key, secret_key)
+}
+
+
+
+pub fn process_pid_runing(pid: i32, name: Option<String>) -> bool {
+    let system = System::new_all();
+    let pid_to_check = Pid::from(pid as usize); 
+    
+    match system.process(pid_to_check) {
+        Some(process) => {
+            match name {
+                Some(name) => {
+                    if process.name().to_string().contains(&name) {
+                        return true;
+                    }
+                    false
+                },
+                None => true, // 如果 name 参数为 None，则认为进程存在
+            }
+        },
+        None => false,
+    }
 }
