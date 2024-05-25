@@ -3,6 +3,7 @@ name = "rust-panel"
 version = "0.0.1"
 edition = "2021"
 authors = ["Wynters <wyn.devs@gmail.com>"]
+license = "apache-2.0"
 include = [
     "**/*",
 ]
