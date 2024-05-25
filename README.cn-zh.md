@@ -14,6 +14,7 @@ _语言: 中文, [English](README.md)
 ![image](https://github.com/WyntersN/RustPanel/assets/27792650/5080e1e5-24f5-4fdc-a85e-be45061626b5)
 
 这是基于Rust开发的新一代服务器面板。它能够监控服务器CPU、内存、流量流入和流出，以及管理数据库、网站、Docker，支持第三方插件开发等操作
+
 **当项目能够正常运行时将会发布一个构建版本(Linux和Win,我相信这很快)***
 
 ## 项目计划
