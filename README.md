@@ -15,6 +15,8 @@ _language: English, [中文](README.cn-zh.md)
 
 This is a new generation server panel developed based on Rust.It is capable of monitoring server CPU, memory, traffic inflow and outflow, as well as managing databases, websites, dockers, support third-party plugin development and other operations
 
+**When the project can run normally, a build version will be released(linux and win,I believe this will happen soon)**
+
 ## Development plan
 |service |description|
 |----------------|--------------------------------|
