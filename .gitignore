@@ -11,4 +11,5 @@
 /server/db/redis/*
 /server/db/mongo/*
 /server/db/postgre/*
+/server/safe/*
 *.pid
