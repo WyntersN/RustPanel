@@ -4,7 +4,7 @@
  # @version: 
  # @Author: Wynters
  # @Date: 2024-05-05 23:03:31
- # @LastEditTime: 2024-05-24 13:03:11
+ # @LastEditTime: 2024-05-27 17:46:55
  # @FilePath: \RustPanel\build.sh
  #
  #
@@ -35,8 +35,10 @@ case "$OS" in
             mkdir -p "$TARGET_DIR"
             mkdir -p "$TARGET_DIR/bin"
             mkdir -p "$TARGET_DIR/runtime"
+            mkdir -p "$TARGET_DIR/wwwroot"
+            mkdir -p "$TARGET_DIR/server"
 
-            dirs="addons config public locales install"
+            dirs="addons config public locales wwwroot server"
             for dir in $dirs; do
                 cp -r "./$dir" "$TARGET_DIR" > /dev/null
                 if [ $? -ne 0 ]; then
@@ -79,8 +81,10 @@ case "$OS" in
             mkdir -p "$TARGET_DIR"
             mkdir -p "$TARGET_DIR/bin"
             mkdir -p "$TARGET_DIR/runtime"
+            mkdir -p "$TARGET_DIR/wwwroot"
+            mkdir -p "$TARGET_DIR/server"
 
-            dirs="addons config public locales install"
+            dirs="addons config public locales wwwroot server"
             for dir in $dirs; do
                 cp -r "./$dir" "$TARGET_DIR" > /dev/null
                 if [ $? -ne 0 ]; then
@@ -119,8 +123,10 @@ case "$OS" in
             mkdir -p "$TARGET_DIR"
             mkdir -p "$TARGET_DIR/bin"
             mkdir -p "$TARGET_DIR/runtime"
+            mkdir -p "$TARGET_DIR/wwwroot"
+            mkdir -p "$TARGET_DIR/server"
 
-            dirs="addons config public locales install"
+            dirs="addons config public locales wwwroot server"
             for dir in $dirs; do
                 cp -r "./$dir" "$TARGET_DIR" > /dev/null
                 if [ $? -ne 0 ]; then

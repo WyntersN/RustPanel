@@ -4,5 +4,11 @@
 *.lock
 *.db*
 /wwwroot/*
-/server/*
+/server/web/apache/*
+/server/web/caddy/*
+/server/web/nginx/*
+/server/db/mysql/*
+/server/db/redis/*
+/server/db/mongo/*
+/server/db/postgre/*
 *.pid
