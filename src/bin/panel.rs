@@ -3,7 +3,7 @@
  * @version:
  * @Author: Wynters
  * @Date: 2024-05-07 15:35:18
- * @LastEditTime: 2024-05-25 15:59:42
+ * @LastEditTime: 2024-05-27 16:24:44
  * @FilePath: \RustPanel\src\bin\panel.rs
  */
 use actix_files as fs;
@@ -11,7 +11,7 @@ use actix_session::{config::PersistentSession, storage::CookieSessionStore, Sess
 use actix_web::{cookie::{time::Duration, Key}, get, web, Responder};
 use diesel::{r2d2::ConnectionManager, SqliteConnection};
 use rust_panel::{
-    api, common::sys::get_all_ip_addresses, errors::handlers, log_error, log_info, log_warn, models::users::find_user_by_id, server::{
+    api, common::sys::get_all_ip_addresses, errors::handlers, log_error, log_info, log_warn, models::user::find_user_by_id, service::{
         db::{install, DBPool},
         global::{CONF, SESSION_KEY},
     }, test

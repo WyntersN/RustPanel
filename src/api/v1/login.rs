@@ -18,8 +18,8 @@ use crate::{
     },
     common::fun::sm4_decrypt_login,
     errors::common::CommonError,
-    models::users::find_user_update_error_count,
-    server::{db::DBPool, global::CONF},
+    models::user::find_user_update_error_count,
+    service::{db::DBPool, global::CONF},
 };
 use serde::{Deserialize, Serialize};
 

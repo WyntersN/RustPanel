@@ -3,14 +3,14 @@
  * @version:
  * @Author: Wynters
  * @Date: 2024-05-14 15:00:17
- * @LastEditTime: 2024-05-16 21:39:09
+ * @LastEditTime: 2024-05-27 16:24:36
  * @FilePath: \RustPanel\src\api\v1\os.rs
  */
 
 use actix_web::HttpResponse;
 use sysinfo::{Disks, Networks, System};
 
-use crate::{api::{auth::AuthUser, ResponseStructure}, server::global::OS_INFO};
+use crate::{api::{auth::AuthUser, ResponseStructure}, service::global::OS_INFO};
 use serde_json::json;
 pub async fn os_info(_: AuthUser) -> HttpResponse {
     let mut sys = System::new_all();

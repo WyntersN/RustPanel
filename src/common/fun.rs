@@ -3,7 +3,7 @@
  * @version: 
  * @Author: Wynters
  * @Date: 2024-05-08 21:09:05
- * @LastEditTime: 2024-05-25 16:21:13
+ * @LastEditTime: 2024-05-27 16:08:50
  * @FilePath: \RustPanel\src\common\fun.rs
  */
 use crypto::md5::Md5;
@@ -69,7 +69,8 @@ pub fn process_pid_runing(pid: i32, name: Option<String>) -> bool {
         Some(process) => {
             match name {
                 Some(name) => {
-                    if process.name().to_string().contains(&name) {
+                    println!("Process name: {}", process.name());
+                    if process.name().to_string().to_lowercase().contains(&name.to_lowercase()) {
                         return true;
                     }
                     false

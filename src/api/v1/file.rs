@@ -1,7 +1,7 @@
 use crate::api::auth::AuthUser;
 use crate::api::{ResponseStructure, ResponseStructureError};
 use crate::common::fun::{sm4_decrypt_file, sm4_encrypt_file};
-use crate::server::global::CONF;
+use crate::service::global::CONF;
 use actix_web::{web, Error, HttpResponse};
 use encoding_rs::{GBK, UTF_8};
 use rust_i18n::t;

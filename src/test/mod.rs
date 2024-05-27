@@ -3,12 +3,12 @@
  * @version:
  * @Author: Wynters
  * @Date: 2024-05-07 17:41:48
- * @LastEditTime: 2024-05-25 16:24:09
+ * @LastEditTime: 2024-05-27 16:24:08
  * @FilePath: \RustPanel\src\test\mod.rs
  */
 
 
-use crate::server::db::DBPool;
+use crate::service::db::DBPool;
 
 pub fn demo(_: &DBPool) {
 

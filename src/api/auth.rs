@@ -9,8 +9,8 @@
 use crate::{
     common::fun::sha1_salt,
     errors::common::CommonError,
-    models::{structure::rp_users::SlimUser, users::find_user_by_id},
-    server::{
+    models::{structure::rp_users::SlimUser, user::find_user_by_id},
+    service::{
         db::DBPool,
         global::{CONF, USER_PASSWORD_KEY},
     },

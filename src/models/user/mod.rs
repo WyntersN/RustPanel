@@ -3,7 +3,7 @@
  * @version:
  * @Author: Wynters
  * @Date: 2024-05-08 21:50:55
- * @LastEditTime: 2024-05-13 22:04:49
+ * @LastEditTime: 2024-05-27 16:24:23
  * @FilePath: \RustPanel\src\models\users\mod.rs
  */
 
@@ -13,7 +13,7 @@ use super::structure::{
     rp_users::Users,
     schema::rp_users::{self,dsl::{error_count, rp_users as ds_rp_users}},
 };
-use crate::{errors::common::CommonError, server::db::DBPool};
+use crate::{errors::common::CommonError, service::db::DBPool};
 use diesel::{prelude::*, r2d2::ConnectionManager, ExpressionMethods, QueryDsl};
 use r2d2::PooledConnection;
 
