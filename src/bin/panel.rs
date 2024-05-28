@@ -3,7 +3,7 @@
  * @version:
  * @Author: Wynters
  * @Date: 2024-05-07 15:35:18
- * @LastEditTime: 2024-05-27 16:24:44
+ * @LastEditTime: 2024-05-28 20:04:07
  * @FilePath: \RustPanel\src\bin\panel.rs
  */
 use actix_files as fs;
