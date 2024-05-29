@@ -3,7 +3,7 @@
  * @version:
  * @Author: Wynters
  * @Date: 2024-05-07 15:35:18
- * @LastEditTime: 2024-05-28 20:04:07
+ * @LastEditTime: 2024-05-29 18:36:53
  * @FilePath: \RustPanel\src\bin\panel.rs
  */
 use actix_files as fs;
@@ -48,7 +48,7 @@ async fn main() -> std::io::Result<()> {
         ))
         .expect("Failed to create pool.");
     install(&pool);
-    test::demo(&pool);
+    test::demo(&pool).await;
 
     if !port_check::is_local_port_free(CONF.app.port) {
         log_error!("Error: The Port {} is already in use.", CONF.app.port);
@@ -187,7 +187,7 @@ fn init() {
 
      // 将 PID 写入 .pid 文件
      match write!(file, "{}", pid) {
-        Ok(_) => println!("PID {} written to example.pid", pid),
+        Ok(_) => println!("PID {} written to panel.pid", pid),
         Err(err) => eprintln!("Error writing to file: {}", err),
     }
     // let mut aaa = false;
