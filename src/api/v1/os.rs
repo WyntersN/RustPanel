@@ -3,7 +3,7 @@
  * @version:
  * @Author: Wynters
  * @Date: 2024-05-14 15:00:17
- * @LastEditTime: 2024-05-27 16:24:36
+ * @LastEditTime: 2024-05-31 18:02:09
  * @FilePath: \RustPanel\src\api\v1\os.rs
  */
 
@@ -27,7 +27,7 @@ pub async fn os_info(_: AuthUser) -> HttpResponse {
     let mut disk_info: Vec<serde_json::Value> = Vec::new(); 
     for disk in &Disks::new_with_refreshed_list() {
         let mount_point = disk.mount_point().to_str();
-        if mount_point.is_none() || mount_point.unwrap().to_string().contains("docker") {
+        if mount_point.is_none() || mount_point.unwrap().to_string().contains("docker") || mount_point.unwrap().to_string().contains("/boot/efi") {
             continue;
         } 
 
