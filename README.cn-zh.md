@@ -22,7 +22,7 @@ _语言: 中文, [English](README.md)
 |服务 |描述|
 |----------------|--------------------------------|
 |支持系统|`Linux、Windows、Mac`
-|站点管理|`支持的HTTP 服务器(nignx、apache、caddy) 支持的开发语言 (PHP、Node、Python、Java、Go)`
+|站点管理|`支持的HTTP 服务器(nginx、apache、caddy) 支持的开发语言 (PHP、Node、Python、Java、Go)`
 |服务器管理|`MySql、PostgreSQL、MongoDB、redis`
 |Docker|`这是一个关键点，极有可能在本项目后期增加K8s，以实现K8s管理的可视化操作`
 |文件管理|`您可以在线编辑代码并可视化文件管理。这是一个突出的安全问题，因此我们将在传输和保存过程中对文件进行加密`
