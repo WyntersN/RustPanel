@@ -27,6 +27,8 @@ lazy_static! {
 pub async fn demo(_: &DBPool) {
     let docker = DOCKER.lock().unwrap();
 
+    let _ = docker::install();
+
     docker::image::list().await;
 
     println!("->{:?}", &docker.version().await.unwrap().version.unwrap());
