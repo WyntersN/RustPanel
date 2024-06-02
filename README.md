@@ -21,7 +21,7 @@ This is a new generation server panel developed based on Rust.It is capable of m
 |service |description|
 |----------------|--------------------------------|
 |Support OS|`Linux、Windows、Mac`
-|Website Management|`HTTP SERVER(nignx、apache、caddy) development language (PHP、Node、Python、Java、Go)`
+|Website Management|`HTTP SERVER(nginx、apache、caddy) development language (PHP、Node、Python、Java、Go)`
 |Database Management|`MySql、PostgreSQL、MongoDB、redis`
 |Docker|`This is a key point, and it is highly likely that K8s will be added in the later stages of this project to achieve visual operation of K8s management`|
 |File Management|`You can edit code online and visualize file management.This is a prominent security issue, so we will encrypt the files during transmission and saveing`
