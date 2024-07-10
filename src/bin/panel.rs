@@ -3,7 +3,7 @@
  * @version:
  * @Author: Wynters
  * @Date: 2024-05-07 15:35:18
- * @LastEditTime: 2024-05-29 18:36:53
+ * @LastEditTime: 2024-07-11 06:34:58
  * @FilePath: \RustPanel\src\bin\panel.rs
  */
 use actix_files as fs;
@@ -60,7 +60,7 @@ async fn main() -> std::io::Result<()> {
         match get_all_ip_addresses() {
             Ok(ip_addresses) => {
                 for ip in ip_addresses {
-                    println!("http://{}:{}/#/admin/login?v={}", ip, CONF.app.port, CONF.app.security_dir);
+                    println!("http://{}:{}/#/login?v={}", ip, CONF.app.port, CONF.app.security_dir);
                 }
             }
             Err(e) => {
@@ -86,7 +86,7 @@ async fn main() -> std::io::Result<()> {
         .unwrap();
 
         println!(
-            "http://{}:{}/#/admin/login?v={}",
+            "http://{}:{}/#/login?v={}",
             resp_ip_addr, CONF.app.port, CONF.app.security_dir
         );
 

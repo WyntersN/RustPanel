@@ -3,7 +3,7 @@
  * @version:
  * @Author: Wynters
  * @Date: 2024-05-07 17:41:48
- * @LastEditTime: 2024-05-29 20:46:58
+ * @LastEditTime: 2024-07-11 06:34:23
  * @FilePath: \RustPanel\src\test\mod.rs
  */
 
@@ -40,7 +40,6 @@ pub async fn demo(_: &DBPool) {
         .await
         .unwrap();
 
-    println!("---------------------------------------");
 
     for network in networks {
         println!("-> {:?}", network.id.as_deref().unwrap_or("No ID"));
@@ -104,7 +103,6 @@ pub async fn demo(_: &DBPool) {
         }))
         .await
         .unwrap();
-    println!("---------------------------------------");
 
     for image in images {
         println!("-> {:?}", image.repo_tags[0]);

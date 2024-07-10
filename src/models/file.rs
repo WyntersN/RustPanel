@@ -41,8 +41,6 @@ impl fmt::Display for FileError {
 impl Error for FileError {}
 
 pub fn save(data: SaveData) -> Result<bool, Box<dyn Error>> {
-    println!("-------------------------{}", data.path);
-
     // 保存文件
     match fs::write(&data.path, sm4_decrypt_file(data.content.to_string())) {
         Ok(_) => Ok(true),
