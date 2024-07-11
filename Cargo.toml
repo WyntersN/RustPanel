@@ -8,6 +8,14 @@ include = [
     "**/*",
 ]
 
+[profile.release]
+opt-level = "z"   
+lto = true       
+codegen-units = 1 
+debug = false     
+panic = "unwind"  
+strip = "symbols"
+
 #[lib] 
 #proc-macro = true
 
@@ -53,3 +61,5 @@ base64 = "0.22"
 encoding_rs = "0.8.34"
 gmsm = "0.1"
 bollard = "*"
+
+

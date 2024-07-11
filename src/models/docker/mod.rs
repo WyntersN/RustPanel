@@ -3,13 +3,14 @@
  * @version:
  * @Author: Wynters
  * @Date: 2024-05-27 17:51:07
- * @LastEditTime: 2024-06-02 17:57:25
+ * @LastEditTime: 2024-07-11 15:15:42
  * @FilePath: \RustPanel\src\models\docker\mod.rs
  */
 pub mod container;
 pub mod image;
 pub mod network;
 use bollard::Docker;
+
 use std::{error::Error, fmt};
 use std::process::{Command, Stdio};
 use std::io::{BufRead, BufReader};
@@ -22,20 +23,22 @@ pub struct DockerError {
 }
 
 impl fmt::Display for DockerError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.message)
     }
 }
+
 impl Error for DockerError {}
-pub fn docker() -> Result<bollard::Docker, Box<dyn Error>> {
-    match Docker::connect_with_socket_defaults() {
-        Ok(res) => return Ok(res),
-        Err(e) => {
-            return Err(Box::new(DockerError {
-                message: e.to_string(),
-            }))
-        }
-    };
+
+impl DockerError {
+    fn new(message: String) -> Self {
+        DockerError { message }
+    }
+}
+
+pub fn docker() -> Result<Docker, Box<dyn Error + Send + Sync>> {
+    Docker::connect_with_socket_defaults()
+        .map_err(|e| Box::new(DockerError::new(e.to_string())) as Box<dyn Error + Send + Sync>)
 }
 
 pub fn install() -> Result<(), Box<dyn Error>> {
