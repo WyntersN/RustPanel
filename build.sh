@@ -12,7 +12,7 @@
  #apk update
  #apk add libc-dev
 ### 
-echo ">>> Building RustPanel in release mode..."
+echo ">>> Building RustPanel in release mode...11"
 OS=$(uname)
 case "$OS" in
     Linux)
