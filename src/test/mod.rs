@@ -24,8 +24,8 @@ use std::default::Default;
 use std::process::Stdio;
 use std::sync::Mutex;
 lazy_static! {
-    pub static ref DOCKER: Mutex<Docker> =
-        Mutex::new(Docker::connect_with_socket_defaults().unwrap());
+    pub static ref DOCKER: Mutex<Option<Docker>> =
+        Mutex::new(Docker::connect_with_socket_defaults().ok());
 }
 pub async fn demo(_: &DBPool)-> Result<(), Box<dyn std::error::Error>> {
     //Test

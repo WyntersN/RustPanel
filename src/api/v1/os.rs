@@ -27,9 +27,13 @@ pub async fn os_info(_: AuthUser) -> HttpResponse {
     let mut disk_info: Vec<serde_json::Value> = Vec::new(); 
     for disk in &Disks::new_with_refreshed_list() {
         let mount_point = disk.mount_point().to_str();
-        if mount_point.is_none() || mount_point.unwrap().to_string().contains("docker") || mount_point.unwrap().to_string().contains("/boot/efi") {
+        if let Some(mp) = mount_point {
+            if mp.contains("docker") || mp.contains("/boot/efi") {
+                continue;
+            }
+        } else {
             continue;
-        } 
+        }
 
         disk_info.push(json!({
             "mount_point": mount_point,

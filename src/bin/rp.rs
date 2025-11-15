@@ -3,14 +3,14 @@
  * @version:
  * @Author: Wynters
  * @Date: 2024-05-07 16:49:06
- * @LastEditTime: 2024-05-08 16:40:12
- * @FilePath: \rust_panel\src\bin\rp.rs
+ * @LastEditTime: 2025-11-15 22:46:13
+ * @FilePath: \RustPanel\src\bin\rp.rs
  */
 
 
 use rust_panel::common;
 fn main() {
-    match sys_info::os_type().unwrap().as_str() {
+    match match sys_info::os_type() { Ok(s) => s.as_str(), Err(_) => "" } {
         "Linux" => {
             println!("OK");
         }
@@ -19,7 +19,7 @@ fn main() {
     
         }
         _ => {
-            format!("Unsupported OS: {}", sys_info::os_type().unwrap());
+            format!("Unsupported OS: {}", sys_info::os_type().unwrap_or_else(|_| String::from("unknown")));
         }
     }
 }

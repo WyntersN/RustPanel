@@ -13,7 +13,7 @@ use std::env;
 use std::net::IpAddr;
 pub fn restart() {
 
-     let project_name = match extract_project_name(env::current_exe().expect("Failed to get current executable path")) {
+     let project_name = match env::current_exe().ok().and_then(|p| extract_project_name(p)) {
         Some(name) => name,
         None => {
             println!("Project root directory not found.");
@@ -21,7 +21,7 @@ pub fn restart() {
         }
     };
 
-    match sys_info::os_type().unwrap().as_str() {
+    match match sys_info::os_type() { Ok(s) => s.as_str(), Err(_) => "" } {
         "Linux" => {
               Command::new(project_name+r"\panel")
              .spawn()
@@ -33,7 +33,7 @@ pub fn restart() {
                 .expect("restart...Failed to restart the process");
         }
         _ => {
-            format!("Unsupported OS: {}", sys_info::os_type().unwrap());
+            format!("Unsupported OS: {}", sys_info::os_type().unwrap_or_else(|_| String::from("unknown")));
         }
     }
   

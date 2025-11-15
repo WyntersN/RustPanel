@@ -11,13 +11,16 @@ use super::docker;
 
 pub async fn list(){
 
-    let images = docker().unwrap().list_images(Some(ListImagesOptions::<String> {
-        all: true,
-        ..Default::default()
-    })).await.unwrap();
+    if let Ok(client) = docker() {
+        if let Ok(images) = client.list_images(Some(ListImagesOptions::<String> {
+            all: true,
+            ..Default::default()
+        })).await {
 
-    for image in images {
-        println!("=============->{:?}", image);
+            for image in images {
+                println!("=============->{:?}", image);
+            }
+        }
     }
 
 }

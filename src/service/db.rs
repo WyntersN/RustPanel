@@ -27,7 +27,10 @@ pub fn install(pool: &DBPool){
            return;
         } 
     } 
-    let mut conn = pool.get().expect("Failed to get a connection from the pool");
+    let mut conn = match pool.get() {
+        Ok(c) => c,
+        Err(_) => return,
+    };
 
   
 
@@ -47,7 +50,7 @@ pub fn install(pool: &DBPool){
             updated_at datetime NOT NULL,
             deleted_at datetime
          )"
-    ).unwrap();
+    ).ok();
     use crate::{common::fun::generate_random_string, models::structure::schema};
     // 插入一条示例数据
     let now: NaiveDateTime = Utc::now().naive_utc().clone();
@@ -71,9 +74,9 @@ pub fn install(pool: &DBPool){
     schema::rp_users::status.eq(0),
     schema::rp_users::created_at.eq(now),
     schema::rp_users::updated_at.eq(now),
- )).execute(&mut *conn).unwrap();
+ )).execute(&mut *conn).ok();
 
-    fs::File::create("./panel.lock").unwrap();
+    let _ = fs::File::create("./panel.lock");
 }
 
 

@@ -80,11 +80,33 @@ pub async fn sign(
 
         //   Identity::login(&req.extensions(), serde_json::to_string(&user).unwrap()).unwrap();
         //返回Cookies
+        let user_json = match serde_json::to_string(&user) {
+            Ok(s) => s,
+            Err(_) => {
+                return Ok(HttpResponse::InternalServerError().json(ResponseStructureError {
+                    success: false,
+                    code: 500,
+                    message: String::from("serialize user error"),
+                }))
+            }
+        };
+
+        let token_val = match generate_jwt(&user_json) {
+            Ok(t) => t,
+            Err(_) => {
+                return Ok(HttpResponse::InternalServerError().json(ResponseStructureError {
+                    success: false,
+                    code: 500,
+                    message: String::from("generate token error"),
+                }))
+            }
+        };
+
         return Ok(HttpResponse::Ok()
             .cookie(
                 actix_web::cookie::Cookie::build(
                     "token",
-                    generate_jwt(&serde_json::to_string(&user).unwrap()).unwrap(),
+                    token_val.clone(),
                 )
                 .finish(),
             )
@@ -93,7 +115,7 @@ pub async fn sign(
                 code: 200,
                 message: String::from("success"),
                 data: Some(LoginSuccessData {
-                    token: generate_jwt(&serde_json::to_string(&user).unwrap()).unwrap(),
+                    token: token_val,
                     user: serde_json::json!({"id":user.id,"username":user.username,"authority":user.authority})
                 }),
               
@@ -147,7 +169,12 @@ fn query(auth_data: LoginAuthData, pool: web::Data<DBPool>) -> Result<AuthUser, 
     };
     use diesel::{prelude::*, ExpressionMethods, QueryDsl};
 
-    let mut conn = pool.get().unwrap();
+    let mut conn = match pool.get() {
+        Ok(c) => c,
+        Err(_) => {
+            return Err(CommonError::InternalServerError(String::from("Failed to get a connection from the pool")).into())
+        }
+    };
     let mut items = rp_users
         .filter(username.eq(&auth_data.username))
         .load::<Users>(&mut conn)?;
@@ -171,10 +198,10 @@ fn query(auth_data: LoginAuthData, pool: web::Data<DBPool>) -> Result<AuthUser, 
             &auth_data.password,
         ) {
             if matching {
-                find_user_update_error_count(user.id, 0, &mut conn).unwrap();
+                let _ = find_user_update_error_count(user.id, 0, &mut conn)?;
                 return Ok(user.into());
             } else {
-                find_user_update_error_count(user.id, user.error_count + 1, &mut conn).unwrap();
+                let _ = find_user_update_error_count(user.id, user.error_count + 1, &mut conn)?;
                 return Err(CommonError::BadRequest(String::from(
                     t!("auth.login.password_error",count=> 5 - (user.error_count+1)),
                 ))

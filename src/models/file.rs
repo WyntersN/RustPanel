@@ -52,13 +52,14 @@ pub fn save(data: SaveData) -> Result<bool, Box<dyn Error>> {
 
 pub fn content(path: String) -> Result<(String, String), Box<dyn Error>> {
     let path = Path::new(&path);
-    // 获取文件元数据
-    let metadata = fs::metadata(path).map_err(|_| {
-        // 如果无法获取元数据，返回错误
-        return Box::new(FileError {
-            message: String::from(t!("file.content.info_error")),
-        });
-    });
+    let metadata = match fs::metadata(path) {
+        Ok(m) => m,
+        Err(_) => {
+            return Err(Box::new(FileError {
+                message: String::from(t!("file.content.info_error")),
+            }))
+        }
+    };
 
     // 先定义一个外部变量，用于存储文件的扩展名
     let mut extension = String::new();
@@ -73,7 +74,7 @@ pub fn content(path: String) -> Result<(String, String), Box<dyn Error>> {
     }
 
     // 检查文件大小是否超过 N MB
-    if metadata.unwrap().len() as f64 / 1048576.0 > CONF.app.max_file_size {
+    if metadata.len() as f64 / 1048576.0 > CONF.app.max_file_size {
         // 如果文件大小超过10MB，返回错误
         return Err(Box::new(FileError {
             message: String::from(t!("file.content.file_max_size_error",size => CONF.app.max_file_size)),
@@ -143,7 +144,7 @@ pub fn get_files_and_dirs_list(dir_path: &str) -> FilesAndDirsInfo {
     let mut p: String = String::new();
 
     if let Ok(cannibalized_dir) = fs::canonicalize(dir_path) {
-        let cannibalized_str = cannibalized_dir.to_str().unwrap();
+        let cannibalized_str = cannibalized_dir.to_string_lossy();
         if cannibalized_str.starts_with("\\\\?\\") {
             let clean_path = if cannibalized_str.starts_with("\\\\?\\UNC\\") {
                 &cannibalized_str[9..]
@@ -154,7 +155,7 @@ pub fn get_files_and_dirs_list(dir_path: &str) -> FilesAndDirsInfo {
             // 打印有效路径
             p = clean_path.to_string();
         } else {
-            p = cannibalized_dir.to_str().unwrap().to_string();
+            p = cannibalized_dir.to_string_lossy().into_owned();
         }
     }
     if let Ok(entries) = fs::read_dir(dir_path) {
@@ -163,19 +164,20 @@ pub fn get_files_and_dirs_list(dir_path: &str) -> FilesAndDirsInfo {
                 let path = entry.path();
                 if let Some(file_name) = path.file_name() {
                     if let Some(file_name_str) = file_name.to_str() {
-                        let metadata = entry.metadata().unwrap();
+                        if let Ok(metadata) = entry.metadata() {
                         if metadata.is_file() {
                             let info = FileInfo {
                                 name: file_name_str.to_string(),
                                 permissions: None,
                                 size: Some(metadata.len()),
                                 modified_time: Some(
-                                    metadata
-                                        .modified()
-                                        .unwrap()
-                                        .duration_since(UNIX_EPOCH)
-                                        .unwrap()
-                                        .as_secs() as u64,
+                                    match metadata.modified() {
+                                        Ok(t) => match t.duration_since(UNIX_EPOCH) {
+                                            Ok(d) => d.as_secs() as u64,
+                                            Err(_) => 0,
+                                        },
+                                        Err(_) => 0,
+                                    },
                                 ),
                             };
 
@@ -185,16 +187,18 @@ pub fn get_files_and_dirs_list(dir_path: &str) -> FilesAndDirsInfo {
                                 name: file_name_str.to_string(),
                                 permissions: None,
                                 modified_time: Some(
-                                    metadata
-                                        .modified()
-                                        .unwrap()
-                                        .duration_since(UNIX_EPOCH)
-                                        .unwrap()
-                                        .as_secs() as u64,
+                                    match metadata.modified() {
+                                        Ok(t) => match t.duration_since(UNIX_EPOCH) {
+                                            Ok(d) => d.as_secs() as u64,
+                                            Err(_) => 0,
+                                        },
+                                        Err(_) => 0,
+                                    },
                                 ),
                             };
 
                             dirs_info.push(info);
+                        }
                         }
                     }
                 }

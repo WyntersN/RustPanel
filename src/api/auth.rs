@@ -32,26 +32,34 @@ impl FromRequest for AuthUser {
 
         match req.headers().get("Authorization"){
             Some(token) => {
-                if let Ok(claims) = decode_jwt(token.to_str().unwrap()) {
+                if let Ok(token_str) = token.to_str() {
+                if let Ok(claims) = decode_jwt(token_str) {
                     // decoding tokens and obtaining user information
                     if let Ok(user) = serde_json::from_str::<SlimUser>(&claims.sub) {
-                        if let Ok(db_user) = find_user_by_id(
-                            user.id,
-                            &req.app_data::<web::Data<DBPool>>()
-                                .expect("DBPool not found")
-                                .clone(),
-                        )
-                        .map_err(|_| CommonError::InternalServerError)
-                        {
-                            if db_user.unwrap().password != user.password {
-                                return ready(Err(CommonError::Unauthorized(
-                                    String::from("password error"),
-                                )
-                                .into()));
+                        if let Some(pool) = req.app_data::<web::Data<DBPool>>() {
+                            if let Ok(db_user) = find_user_by_id(
+                                user.id,
+                                &pool.clone(),
+                            )
+                            .map_err(|_| CommonError::InternalServerError(String::from("db error")))
+                            {
+                                if let Some(db_user) = db_user {
+                                    if db_user.password != user.password {
+                                        return ready(Err(CommonError::Unauthorized(
+                                            String::from("password error"),
+                                        )
+                                        .into()));
+                                    }
+                                } else {
+                                    return ready(Err(CommonError::Unauthorized(String::from("user not found")).into()));
+                                }
                             }
+                        } else {
+                            return ready(Err(CommonError::InternalServerError(String::from("DBPool not found")).into()));
                         }
                         return ready(Ok(user));
                     }
+                }
                 }
             }
             None => {
@@ -108,11 +116,10 @@ pub fn generate_jwt(subject: &str) -> Result<String, jsonwebtoken::errors::Error
         &Header::new(Algorithm::HS256),
         &Claims {
             sub: String::from(subject),
-            exp: (std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_secs()
-                + (CONF.app.session_ttl * 60 * 60) as u64) as usize,
+            exp: (match std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
+                Ok(d) => d.as_secs(),
+                Err(_) => 0,
+            } + (CONF.app.session_ttl * 60 * 60) as u64) as usize,
         },
         &EncodingKey::from_secret(USER_PASSWORD_KEY.as_ref()),
     )?)

@@ -84,8 +84,8 @@ async fn main() -> std::io::Result<()> {
 
         let resp_ip_addr: String = ureq::get("http://ipinfo.io/ip")
         .call()
-        .unwrap()
-        .into_string()
+        .ok()
+        .and_then(|r| r.into_string().ok())
         .unwrap_or(String::from("127.0.0.1"));
 
         println!(
