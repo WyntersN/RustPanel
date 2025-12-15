@@ -41,7 +41,7 @@ os_info = { version = "3"}
 sys-info = "0.9"
 jsonwebtoken = "9.3.0"
 r2d2 = "0.8"
-actix-web = "4"
+actix-web = { version = "4", default-features = false, features = ["cookies", "macros", "compress-gzip", "compress-brotli"] }
 log4rs = "1"
 log = "0.4"
 serde = "1.0"
@@ -61,5 +61,10 @@ base64 = "0.22"
 encoding_rs = "0.8.34"
 gmsm = "0.1"
 bollard = "*"
-
-
+reqwest = { version = "0.11", features = ["blocking", "json", "stream", "multipart"] }
+flate2 = "1.0"
+tar = "0.4"
+tempfile = "3"
+tokio-util = { version = "0.7", features = ["io"] }
+futures-util = "0.3"
+num_cpus = "1.0"

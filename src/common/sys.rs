@@ -3,8 +3,8 @@
  * @version:
  * @Author: Wynters
  * @Date: 2024-05-08 14:47:19
- * @LastEditTime: 2024-05-08 16:32:47
- * @FilePath: \rust_panel\src\common\sys.rs
+ * @LastEditTime: 2025-12-15 13:16:52
+ * @FilePath: \RustPanel\src\common\sys.rs
  */
 
 use std::process::Command;
@@ -15,13 +15,13 @@ pub fn restart() {
 
      let project_name = match env::current_exe().ok().and_then(|p| extract_project_name(p)) {
         Some(name) => name,
-        None => {
+        std::prelude::v1::None => {
             println!("Project root directory not found.");
             return;
         }
     };
 
-    match match sys_info::os_type() { Ok(s) => s.as_str(), Err(_) => "" } {
+    match sys_info::os_type().unwrap().as_str() {
         "Linux" => {
               Command::new(project_name+r"\panel")
              .spawn()
@@ -33,7 +33,7 @@ pub fn restart() {
                 .expect("restart...Failed to restart the process");
         }
         _ => {
-            format!("Unsupported OS: {}", sys_info::os_type().unwrap_or_else(|_| String::from("unknown")));
+            let _ = format!("Unsupported OS: {}", sys_info::os_type().unwrap());
         }
     }
   

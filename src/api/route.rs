@@ -43,7 +43,5 @@ pub fn v1() -> actix_web::Scope {
                 web::resource("/os_info")
                     .route(web::get().to(v1::os::os_info))
             )
-            .service(v1::ping)
-            .service(v1::pid_runing)
 )
 }

@@ -13,3 +13,4 @@ pub mod db;
 pub mod settings;
 pub mod file;
 pub mod docker;
+pub mod system;

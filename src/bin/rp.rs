@@ -3,23 +3,30 @@
  * @version:
  * @Author: Wynters
  * @Date: 2024-05-07 16:49:06
- * @LastEditTime: 2025-11-15 22:46:13
+ * @LastEditTime: 2025-12-15 13:17:54
  * @FilePath: \RustPanel\src\bin\rp.rs
  */
 
 
 use rust_panel::common;
 fn main() {
-    match match sys_info::os_type() { Ok(s) => s.as_str(), Err(_) => "" } {
-        "Linux" => {
-            println!("OK");
+    match sys_info::os_type() {
+        Ok(os_type) => {
+            match os_type.as_str() {
+                "Linux" => {
+                    println!("OK");
+                }
+                "Windows" => {
+                   common::sys::restart()
+                
+                }
+                _ => {
+                    let _ = format!("Unsupported OS: {}", os_type);
+                }
+            }
         }
-        "Windows" => {
-           common::sys::restart()
-    
-        }
-        _ => {
-            format!("Unsupported OS: {}", sys_info::os_type().unwrap_or_else(|_| String::from("unknown")));
+        Err(e) => {
+            let _ = format!("Error getting OS type: {:?}", e);
         }
     }
 }
