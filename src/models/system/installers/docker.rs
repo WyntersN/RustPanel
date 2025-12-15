@@ -6,197 +6,172 @@ use super::manager::{OsManager, PackageManager};
 pub struct DockerInstaller;
 
 impl DockerInstaller {
-    pub async fn install(_version: &str) -> Result<(), Box<dyn Error + Send + Sync>> {
+    pub async fn install(version: &str) -> Result<(), Box<dyn Error + Send + Sync>> {
         println!("Starting Docker installation...");
-        // Note: Docker version argument is often ignored in standard repo installs unless specifically requested.
-        // For simplicity, we install the latest stable version from official repos.
-
-        let pm = OsManager::detect_package_manager();
-        match pm {
-            PackageManager::Yum => Self::install_yum().await?,
-            PackageManager::Apt => Self::install_apt().await?,
-            PackageManager::Unknown => return Err("Unsupported OS for Docker installation".into()),
-        }
-
-        // Enable and Start Docker
-        println!("Starting Docker service...");
-        let _ = Command::new("systemctl").arg("enable").arg("docker").status().await;
-        let status = Command::new("systemctl").arg("start").arg("docker").status().await?;
         
-        if !status.success() {
-            return Err("Failed to start Docker service".into());
+        // 1. Install System Dependencies
+        Self::install_system_dependencies().await?;
+
+        // 2. Download Static Binaries
+        // If version is "latest" or empty, we default to a known stable version to ensure URL validity
+        // Or we could try to resolve "latest", but for static builds, explicit versions are safer.
+        let docker_version = if version.is_empty() || version == "latest" {
+            "27.3.1" // Hardcoded recent stable version
+        } else {
+            version
+        };
+
+        println!("Downloading Docker {} static binaries...", docker_version);
+        let download_url = format!("https://download.docker.com/linux/static/stable/x86_64/docker-{}.tgz", docker_version);
+        
+        let temp_dir = std::env::temp_dir().join("rustpanel_docker");
+        if temp_dir.exists() {
+            fs::remove_dir_all(&temp_dir).await?;
+        }
+        fs::create_dir_all(&temp_dir).await?;
+
+        let tarball_path = temp_dir.join(format!("docker-{}.tgz", docker_version));
+        OsManager::download_file(&download_url, &tarball_path).await?;
+
+        // 3. Extract
+        OsManager::extract_tarball(&tarball_path, &temp_dir).await?;
+        // Structure is temp_dir/docker/{dockerd, docker, ...}
+
+        // 4. Install to Server Directory
+        let current_dir = std::env::current_dir()?;
+        let install_base = current_dir.join("server").join("docker"); // e.g., /rust/RustPanel/server/docker
+        let bin_dir = install_base.join("bin");
+        let data_dir = install_base.join("data");
+        let config_dir = install_base.join("config");
+
+        // Clean old if exists
+        if install_base.exists() {
+             // Stop service first just in case
+            let _ = Command::new("systemctl").arg("stop").arg("docker").status().await;
+            fs::remove_dir_all(&install_base).await?;
         }
 
-        println!("Docker installed successfully!");
+        fs::create_dir_all(&bin_dir).await?;
+        fs::create_dir_all(&data_dir).await?;
+        fs::create_dir_all(&config_dir).await?;
+
+        // Move binaries
+        let extracted_docker_dir = temp_dir.join("docker");
+        let mut entries = fs::read_dir(&extracted_docker_dir).await?;
+        while let Some(entry) = entries.next_entry().await? {
+            let path = entry.path();
+            if path.is_file() {
+                let file_name = path.file_name().unwrap();
+                fs::rename(&path, bin_dir.join(file_name)).await?;
+            }
+        }
+
+        // 5. Configure daemon.json
+        println!("Configuring Docker...");
+        let daemon_json_path = config_dir.join("daemon.json");
+        let daemon_config = format!(r#"
+{{
+  "data-root": "{}"
+}}
+"#, data_dir.display().to_string().replace("\\", "/")); // JSON needs forward slashes or escaped backslashes
+
+        fs::write(&daemon_json_path, daemon_config).await?;
+
+        // 6. Setup Service
+        Self::setup_service(&bin_dir, &daemon_json_path).await?;
+
+        // 7. Cleanup
+        let _ = fs::remove_dir_all(&temp_dir).await;
+
+        println!("Docker installed successfully to {}!", install_base.display());
         Ok(())
     }
 
     pub async fn uninstall() -> Result<(), Box<dyn Error + Send + Sync>> {
         println!("Uninstalling Docker...");
         
-        let pm = OsManager::detect_package_manager();
-        
         // Stop service
         let _ = Command::new("systemctl").arg("stop").arg("docker").status().await;
         let _ = Command::new("systemctl").arg("disable").arg("docker").status().await;
-
-        match pm {
-            PackageManager::Yum => {
-                let pkgs = vec![
-                    "docker-ce", "docker-ce-cli", "containerd.io", "docker-buildx-plugin", "docker-compose-plugin",
-                    "docker", "docker-client", "docker-client-latest", "docker-common", "docker-latest", "docker-latest-logrotate", "docker-logrotate", "docker-engine"
-                ];
-                Command::new("yum").arg("remove").arg("-y").args(&pkgs).status().await?;
-            }
-            PackageManager::Apt => {
-                let pkgs = vec![
-                    "docker-ce", "docker-ce-cli", "containerd.io", "docker-buildx-plugin", "docker-compose-plugin",
-                    "docker.io", "docker-doc", "docker-compose", "podman-docker", "containerd", "runc"
-                ];
-                Command::new("apt-get").arg("purge").arg("-y").args(&pkgs).status().await?;
-            }
-            PackageManager::Unknown => return Err("Unsupported OS".into()),
+        
+        let service_file = std::path::Path::new("/etc/systemd/system/docker.service");
+        if service_file.exists() {
+            fs::remove_file(service_file).await?;
+            let _ = Command::new("systemctl").arg("daemon-reload").status().await;
         }
 
-        // Cleanup directories
-        let paths = vec!["/var/lib/docker", "/var/lib/containerd", "/etc/docker"];
-        for path in paths {
-            let p = std::path::Path::new(path);
-            if p.exists() {
-                let _ = fs::remove_dir_all(p).await;
-            }
+        // Remove files
+        let current_dir = std::env::current_dir()?;
+        let install_base = current_dir.join("server").join("docker");
+        if install_base.exists() {
+            fs::remove_dir_all(install_base).await?;
         }
 
         println!("Docker uninstalled.");
         Ok(())
     }
 
-    async fn install_yum() -> Result<(), Box<dyn Error + Send + Sync>> {
-        // 1. Remove old versions
-        let old_pkgs = vec![
-            "docker", "docker-client", "docker-client-latest", "docker-common", "docker-latest", "docker-latest-logrotate", "docker-logrotate", "docker-engine"
-        ];
-        let _ = Command::new("yum").arg("remove").arg("-y").args(&old_pkgs).status().await;
-
-        // 2. Install utils
-        OsManager::install_dependencies(&["yum-utils"]).await?;
-
-        // 3. Add Repo
-        println!("Adding Docker repo...");
-        let status = Command::new("yum-config-manager")
-            .arg("--add-repo")
-            .arg("https://download.docker.com/linux/centos/docker-ce.repo")
-            .status()
-            .await?;
-        
-        if !status.success() {
-            // Try to handle RedHat/Fedora if CentOS repo fails, or just proceed hoping it worked or user has repo.
-            // But let's assume standard CentOS/RHEL/Alinux/etc compatibility.
-             return Err("Failed to add Docker repository".into());
-        }
-
-        // 4. Install Docker
-        println!("Installing Docker packages...");
-        let pkgs = vec!["docker-ce", "docker-ce-cli", "containerd.io", "docker-buildx-plugin", "docker-compose-plugin"];
-        OsManager::install_dependencies(&pkgs).await?;
-
-        Ok(())
+    async fn install_system_dependencies() -> Result<(), Box<dyn Error + Send + Sync>> {
+        let pm = OsManager::detect_package_manager();
+        let pkgs = match pm {
+            PackageManager::Yum => vec![
+                "iptables", "git", "xz", "procps" // Basic requirements
+            ],
+            PackageManager::Apt => vec![
+                "iptables", "git", "xz-utils", "procps", "iproute2"
+            ],
+            PackageManager::Unknown => return Err("Unsupported OS".into()),
+        };
+        OsManager::install_dependencies(&pkgs).await
     }
 
-    async fn install_apt() -> Result<(), Box<dyn Error + Send + Sync>> {
-        // 1. Remove old versions
-        let old_pkgs = vec![
-            "docker.io", "docker-doc", "docker-compose", "podman-docker", "containerd", "runc"
-        ];
-        let _ = Command::new("apt-get").arg("remove").arg("-y").args(&old_pkgs).status().await;
+    async fn setup_service(bin_dir: &std::path::Path, config_path: &std::path::Path) -> Result<(), Box<dyn Error + Send + Sync>> {
+        let dockerd_path = bin_dir.join("dockerd");
+        
+        // Add bin_dir to PATH in environment or just absolute path
+        // We need to make sure 'containerd' and 'runc' are found.
+        // Docker static bundle puts them all in same dir.
+        // dockerd needs them in PATH.
+        
+        let service_content = format!(r#"
+[Unit]
+Description=Docker Application Container Engine
+Documentation=https://docs.docker.com
+After=network-online.target firewalld.service
+Wants=network-online.target
 
-        // 2. Install utils
-        OsManager::install_dependencies(&["ca-certificates", "curl", "gnupg"]).await?;
+[Service]
+Type=notify
+Environment="PATH={}:/usr/bin:/usr/local/bin"
+ExecStart={} --config-file {}
+ExecReload=/bin/kill -s HUP $MAINPID
+TimeoutSec=0
+RestartSec=2
+Restart=always
+StartLimitBurst=3
+StartLimitInterval=60s
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+TasksMax=infinity
+Delegate=yes
+KillMode=process
+OOMScoreAdjust=-500
 
-        // 3. Add GPG Key
-        println!("Adding Docker GPG key...");
-        fs::create_dir_all("/etc/apt/keyrings").await?;
-        let keyring_path = "/etc/apt/keyrings/docker.gpg";
-        // Remove old if exists
-        if std::path::Path::new(keyring_path).exists() {
-            let _ = fs::remove_file(keyring_path).await;
-        }
+[Install]
+WantedBy=multi-user.target
+"#, bin_dir.display(), dockerd_path.display(), config_path.display());
 
-        // Curl pipe to gpg --dearmor
-        // Since we are in Rust, let's use Command chain or just download and shell out for simplicity of pipe
-        let status = Command::new("bash")
-            .arg("-c")
-            .arg("curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg")
-            .status()
-            .await?;
+        fs::write("/etc/systemd/system/docker.service", service_content).await?;
+        
+        let _ = Command::new("systemctl").arg("daemon-reload").status().await;
+        let _ = Command::new("systemctl").arg("enable").arg("docker").status().await;
+        let status = Command::new("systemctl").arg("start").arg("docker").status().await?;
         
         if !status.success() {
-             // Fallback for Debian if ubuntu fails? 
-             // Ideally we should detect distro codename.
-             // But let's try generic approach or check /etc/os-release
-             // For now, assume Ubuntu/Debian compatible.
-             return Err("Failed to add Docker GPG key".into());
+             return Err("Failed to start Docker service".into());
         }
-        let _ = Command::new("chmod").arg("a+r").arg(keyring_path).status().await;
-
-        // 4. Add Repo
-        println!("Adding Docker repository...");
-        // Get codename
-        let output = Command::new("lsb_release").arg("-cs").output().await;
-        let codename = if let Ok(out) = output {
-             String::from_utf8_lossy(&out.stdout).trim().to_string()
-        } else {
-            // Fallback: cat /etc/os-release
-            "jammy".to_string() // unsafe assumption, but standard on many. Ideally parse /etc/os-release.
-        };
         
-        // Better codename detection
-        let codename = Self::get_distro_codename().await.unwrap_or("jammy".to_string());
-
-        // Determine if ubuntu or debian
-        let os_release = fs::read_to_string("/etc/os-release").await.unwrap_or_default().to_lowercase();
-        let repo_url = if os_release.contains("debian") {
-            "https://download.docker.com/linux/debian"
-        } else {
-            "https://download.docker.com/linux/ubuntu"
-        };
-
-        let repo_line = format!(
-            "deb [arch=\"amd64\" signed-by={}] {} {} stable",
-            keyring_path, repo_url, codename
-        );
-        
-        fs::write("/etc/apt/sources.list.d/docker.list", repo_line).await?;
-
-        // 5. Update and Install
-        println!("Updating apt cache...");
-        let _ = Command::new("apt-get").arg("update").status().await;
-
-        println!("Installing Docker packages...");
-        let pkgs = vec!["docker-ce", "docker-ce-cli", "containerd.io", "docker-buildx-plugin", "docker-compose-plugin"];
-        OsManager::install_dependencies(&pkgs).await?;
-
         Ok(())
-    }
-
-    async fn get_distro_codename() -> Option<String> {
-        // Try lsb_release
-        if let Ok(output) = Command::new("lsb_release").arg("-cs").output().await {
-            if output.status.success() {
-                return Some(String::from_utf8_lossy(&output.stdout).trim().to_string());
-            }
-        }
-        
-        // Try parsing /etc/os-release
-        if let Ok(content) = fs::read_to_string("/etc/os-release").await {
-            for line in content.lines() {
-                if line.starts_with("VERSION_CODENAME=") {
-                    return Some(line.trim_start_matches("VERSION_CODENAME=").trim_matches('"').to_string());
-                }
-            }
-            // Fallback for systems without VERSION_CODENAME (like older CentOS, though we are in apt block)
-            // Debian usually has VERSION_CODENAME
-        }
-        None
     }
 }

@@ -35,7 +35,10 @@ impl MysqlInstaller {
         OsManager::extract_tarball(&tarball_path, &temp_dir).await?;
 
         // 5. Move to install path
-        let install_path = Path::new("/www/server/mysql");
+        let current_dir = std::env::current_dir()?;
+        let install_path_buf = current_dir.join("server").join("mysql");
+        let install_path = install_path_buf.as_path();
+
         if install_path.exists() {
             // Backup or fail? For now, we assume fresh install or overwrite.
             // But mv will fail if dir exists.
@@ -121,7 +124,10 @@ bind-address = 127.0.0.1
             let _ = Command::new("systemctl").arg("daemon-reload").status().await;
         }
 
-        let install_path = Path::new("/www/server/mysql");
+        let current_dir = std::env::current_dir()?;
+        let install_path_buf = current_dir.join("server").join("mysql");
+        let install_path = install_path_buf.as_path();
+        
         if install_path.exists() {
             fs::remove_dir_all(install_path).await?;
         }

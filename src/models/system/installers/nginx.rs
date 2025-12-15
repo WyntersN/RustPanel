@@ -35,7 +35,10 @@ impl NginxInstaller {
 
         // 5. Configure
         println!("Configuring...");
-        let install_path = Path::new("/www/server/nginx");
+        let current_dir = std::env::current_dir()?;
+        let install_path_buf = current_dir.join("server").join("nginx");
+        let install_path = install_path_buf.as_path();
+        
         if !install_path.exists() {
             fs::create_dir_all(install_path).await?;
         }
@@ -115,7 +118,10 @@ impl NginxInstaller {
         }
 
         // Remove files
-        let install_path = Path::new("/www/server/nginx");
+        let current_dir = std::env::current_dir()?;
+        let install_path_buf = current_dir.join("server").join("nginx");
+        let install_path = install_path_buf.as_path();
+        
         if install_path.exists() {
             fs::remove_dir_all(install_path).await?;
         }

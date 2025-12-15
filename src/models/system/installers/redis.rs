@@ -43,7 +43,10 @@ impl RedisInstaller {
         }
 
         // 4. Install
-        let install_path = Path::new("/www/server/redis");
+        let current_dir = std::env::current_dir()?;
+        let install_path_buf = current_dir.join("server").join("redis");
+        let install_path = install_path_buf.as_path();
+
         if !install_path.exists() {
             fs::create_dir_all(install_path).await?;
         }
@@ -94,7 +97,10 @@ impl RedisInstaller {
             let _ = Command::new("systemctl").arg("daemon-reload").status().await;
         }
 
-        let install_path = Path::new("/www/server/redis");
+        let current_dir = std::env::current_dir()?;
+        let install_path_buf = current_dir.join("server").join("redis");
+        let install_path = install_path_buf.as_path();
+
         if install_path.exists() {
             fs::remove_dir_all(install_path).await?;
         }
